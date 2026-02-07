@@ -46,7 +46,7 @@ class SourcesConfig(BaseModel):
 
 
 class LlmConfig(BaseModel):
-    model: str = "deepseek/deepseek-r1:free"  # OpenRouter model ID
+    model: str = "deepseek/deepseek-chat-v3:free"  # OpenRouter model ID
     base_url: str = "https://openrouter.ai/api/v1"
     top_n: int = 10
     max_retries: int = 5  # OpenAI client 重试次数（应对 429 限流）
