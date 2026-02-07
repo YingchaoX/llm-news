@@ -22,7 +22,12 @@ logger = logging.getLogger(__name__)
 # LLM client
 # ---------------------------------------------------------------------------
 
-def _call_llm(llm_config: LlmConfig, settings: Settings, prompt: str) -> str:
+def _call_llm(
+    llm_config: LlmConfig,
+    settings: Settings,
+    prompt: str,
+    max_tokens: int | None = None,
+) -> str:
     """Call LLM via OpenRouter (OpenAI-compatible API).
 
     使用 max_retries 配置控制 429 限流重试次数。
@@ -36,12 +41,41 @@ def _call_llm(llm_config: LlmConfig, settings: Settings, prompt: str) -> str:
         base_url=llm_config.base_url,
         max_retries=llm_config.max_retries,
     )
-    response = client.chat.completions.create(
-        model=llm_config.model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
-    )
-    return response.choices[0].message.content or ""
+
+    kwargs: dict = {
+        "model": llm_config.model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3,
+    }
+    if max_tokens:
+        kwargs["max_tokens"] = max_tokens
+
+    response = client.chat.completions.create(**kwargs)
+
+    # OpenRouter 可能在响应体中返回错误而非 HTTP 状态码
+    error = getattr(response, "error", None)
+    if error:
+        err_msg = error.get("message", str(error)) if isinstance(error, dict) else str(error)
+        err_code = error.get("code", "unknown") if isinstance(error, dict) else "unknown"
+        raise RuntimeError(f"OpenRouter returned error (code={err_code}): {err_msg}")
+
+    if not response.choices:
+        logger.error("LLM returned empty choices. Raw response: %s", response.model_dump_json()[:500])
+        raise ValueError("LLM returned no choices")
+
+    content = response.choices[0].message.content or ""
+
+    # DeepSeek R1 等推理模型可能仅在 reasoning_content 中返回内容
+    if not content:
+        reasoning = getattr(response.choices[0].message, "reasoning_content", None)
+        if reasoning:
+            logger.warning("LLM returned reasoning_content but no content, using reasoning")
+            content = reasoning
+
+    if not content:
+        raise ValueError("LLM returned empty content")
+
+    return content
 
 
 # ---------------------------------------------------------------------------
@@ -80,33 +114,106 @@ def _build_items_text(items: list[NewsItem]) -> str:
     return "\n\n".join(parts)
 
 
+def _extract_json_array(text: str) -> str | None:
+    """从 LLM 响应中提取 JSON 数组，兼容各种包装格式。
+
+    支持: 纯 JSON、markdown 代码块、<think> 标签、截断的数组等。
+    """
+    import re
+
+    # 1. 去除 <think>...</think> 推理标签（GLM-4.5-air 等模型）
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    text = text.strip()
+
+    # 2. 去除 markdown 代码块
+    if "```" in text:
+        match = re.search(r"```(?:json)?\s*\n?(.*?)```", text, re.DOTALL)
+        if match:
+            text = match.group(1).strip()
+
+    # 3. 直接尝试解析
+    try:
+        json.loads(text)
+        return text
+    except json.JSONDecodeError:
+        pass
+
+    # 4. 提取 [ ... ] 区间
+    start = text.find("[")
+    if start == -1:
+        return None
+
+    end = text.rfind("]")
+    if end > start:
+        candidate = text[start:end + 1]
+        try:
+            json.loads(candidate)
+            return candidate
+        except json.JSONDecodeError:
+            pass
+
+    # 5. 处理截断的 JSON 数组（响应被 max_tokens 截断）
+    #    回退到最后一个完整的 '}'，去掉尾部逗号，补 ']'
+    truncated = text[start:]
+    last_brace = truncated.rfind("}")
+    if last_brace > 0:
+        repaired = truncated[:last_brace + 1].rstrip().rstrip(",") + "\n]"
+        try:
+            result = json.loads(repaired)
+            logger.warning(
+                "JSON array was truncated — recovered %d items (response may be incomplete)",
+                len(result),
+            )
+            return repaired
+        except json.JSONDecodeError:
+            pass
+
+    # 6. 逐对象提取（最后手段）
+    object_pattern = re.compile(
+        r'\{\s*"index"\s*:\s*\d+\s*,\s*"summary"\s*:\s*"[^"]*"\s*,\s*"score"\s*:\s*\d+\.?\d*\s*\}'
+    )
+    matches = object_pattern.findall(text)
+    if matches:
+        candidate = "[\n" + ",\n".join(matches) + "\n]"
+        try:
+            result = json.loads(candidate)
+            logger.warning(
+                "JSON extracted via regex — recovered %d items",
+                len(result),
+            )
+            return candidate
+        except json.JSONDecodeError:
+            pass
+
+    return None
+
+
 def _parse_summary_response(
     raw: str, items: list[NewsItem]
 ) -> list[NewsItem]:
     """Parse LLM response and update items with summary + score."""
-    # Strip markdown code fences if present
-    text = raw.strip()
-    if text.startswith("```"):
-        lines = text.split("\n")
-        text = "\n".join(lines[1:])
-        if text.endswith("```"):
-            text = text[:-3]
-        text = text.strip()
+    json_text = _extract_json_array(raw)
 
-    try:
-        results = json.loads(text)
-    except json.JSONDecodeError:
+    if json_text is None:
         logger.error("Failed to parse LLM summary response as JSON")
-        logger.debug("Raw response: %s", raw[:500])
-        # Fallback: return items with default scores
+        logger.warning("Raw response (first 500 chars): %s", raw[:500])
         return items
 
+    try:
+        results = json.loads(json_text)
+    except json.JSONDecodeError:
+        logger.error("JSON parse failed after extraction")
+        return items
+
+    parsed_count = 0
     for entry in results:
         idx = entry.get("index", -1)
         if 0 <= idx < len(items):
             items[idx].summary = entry.get("summary", "")
             items[idx].score = float(entry.get("score", 5))
+            parsed_count += 1
 
+    logger.info("Parsed %d/%d item summaries from LLM response", parsed_count, len(items))
     return items
 
 
@@ -177,7 +284,8 @@ def process(
 
     llm_ok = True
     try:
-        raw_response = _call_llm(config.llm, settings, prompt)
+        # 154 条 × ~100 tokens/条 ≈ 15k tokens，设 16000 防截断
+        raw_response = _call_llm(config.llm, settings, prompt, max_tokens=16000)
         items = _parse_summary_response(raw_response, items)
     except Exception:
         logger.exception("LLM summarization failed — will skip script generation and TTS")
