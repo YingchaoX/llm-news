@@ -23,7 +23,10 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 def _call_llm(llm_config: LlmConfig, settings: Settings, prompt: str) -> str:
-    """Call LLM via OpenRouter (OpenAI-compatible API)."""
+    """Call LLM via OpenRouter (OpenAI-compatible API).
+
+    使用 max_retries 配置控制 429 限流重试次数。
+    """
     api_key = settings.openrouter_api_key
     if not api_key:
         raise ValueError("OPENROUTER_API_KEY is required. Get one at https://openrouter.ai/keys")
@@ -31,6 +34,7 @@ def _call_llm(llm_config: LlmConfig, settings: Settings, prompt: str) -> str:
     client = OpenAI(
         api_key=api_key,
         base_url=llm_config.base_url,
+        max_retries=llm_config.max_retries,
     )
     response = client.chat.completions.create(
         model=llm_config.model,
@@ -171,11 +175,13 @@ def process(
     items_text = _build_items_text(items)
     prompt = _SUMMARIZE_PROMPT.format(count=len(items), items_text=items_text)
 
+    llm_ok = True
     try:
         raw_response = _call_llm(config.llm, settings, prompt)
         items = _parse_summary_response(raw_response, items)
     except Exception:
-        logger.exception("LLM summarization failed, using items without summaries")
+        logger.exception("LLM summarization failed — will skip script generation and TTS")
+        llm_ok = False
 
     # Sort by score descending, take top N
     items.sort(key=lambda x: x.score, reverse=True)
@@ -188,16 +194,22 @@ def process(
     )
 
     # --- Step 2: Generate Broadcast Script ---
-    logger.info("Step 2: Generating broadcast script...")
     script = ""
-    try:
-        script_items_text = _build_script_items_text(top_items)
-        script_prompt = _SCRIPT_PROMPT.format(
-            today=today, n=len(top_items), items_text=script_items_text
+    if not llm_ok:
+        logger.warning(
+            "Skipping script generation because LLM summarization failed — "
+            "TTS will also be skipped"
         )
-        script = _call_llm(config.llm, settings, script_prompt)
-    except Exception:
-        logger.exception("Script generation failed")
+    else:
+        logger.info("Step 2: Generating broadcast script...")
+        try:
+            script_items_text = _build_script_items_text(top_items)
+            script_prompt = _SCRIPT_PROMPT.format(
+                today=today, n=len(top_items), items_text=script_items_text
+            )
+            script = _call_llm(config.llm, settings, script_prompt)
+        except Exception:
+            logger.exception("Script generation failed — TTS will also be skipped")
 
     return DailyReport(
         date=today,
