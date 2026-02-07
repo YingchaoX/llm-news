@@ -1,0 +1,107 @@
+# LLM News - Configuration
+# Secrets (API keys) should be set in .env file, not here.
+
+sources:
+  arxiv:
+    categories: ["cs.CL", "cs.AI", "cs.LG"]
+    max_results: 50
+
+  blogs:
+    - name: "OpenAI"
+      url: "https://openai.com/news/rss.xml"
+    - name: "Google AI"
+      url: "https://blog.google/technology/ai/rss/"
+    - name: "Hugging Face"
+      url: "https://huggingface.co/blog/feed.xml"
+    - name: "Microsoft Research"
+      url: "https://www.microsoft.com/en-us/research/feed/"
+    # Anthropic / DeepSeek / Meta AI 无可用公开 RSS，通过 GitHub releases 和 arXiv 覆盖
+
+  github:
+    repos:
+      - "vllm-project/vllm"
+      - "sgl-project/sglang"
+      - "meta-llama/llama-models"
+      - "deepseek-ai/DeepSeek-V3"
+      - "QwenLM/Qwen2.5"
+      - "huggingface/transformers"
+      - "ggerganov/llama.cpp"
+      - "ollama/ollama"
+      - "openai/openai-python"
+      - "langchain-ai/langchain"
+      - "run-llama/llama_index"
+
+  twitter:
+    enabled: false  # Nitter RSS is unreliable; enable at your own risk
+    kol_list:
+      - "_akhaliq"
+      - "kaboroevich"
+      - "ylaborroevich"
+    nitter_instance: "https://nitter.privacydev.net"
+
+  reddit:
+    subreddits: ["MachineLearning", "LocalLLaMA"]
+    time_filter: "day"
+    limit: 25
+
+llm:
+  # OpenRouter: https://openrouter.ai/models?q=free
+  # 免费模型推荐（:free 后缀 = $0）:
+  #   google/gemma-3-27b-it:free
+  #   meta-llama/llama-3.3-70b-instruct:free
+  #   qwen/qwen-2.5-72b-instruct:free
+  #   deepseek/deepseek-r1:free
+  model: "google/gemma-3-27b-it:free"
+  base_url: "https://openrouter.ai/api/v1"
+  top_n: 10
+
+tts:
+  voice: "en-US-AriaNeural"
+  rate: "+10%"
+
+output:
+  dir: "output"
+
+keywords:
+  - "LLM"
+  - "large language model"
+  - "GPT"
+  - "Claude"
+  - "Gemini"
+  - "DeepSeek"
+  - "Qwen"
+  - "Kimi"
+  - "Moonshot"
+  - "LLaMA"
+  - "Llama"
+  - "Mistral"
+  - "transformer"
+  - "RLHF"
+  - "DPO"
+  - "inference"
+  - "quantization"
+  - "fine-tuning"
+  - "fine tuning"
+  - "RAG"
+  - "retrieval augmented"
+  - "agent"
+  - "reasoning"
+  - "multimodal"
+  - "tokenizer"
+  - "vLLM"
+  - "SGLang"
+  - "GGUF"
+  - "GGML"
+  - "LoRA"
+  - "QLoRA"
+  - "MoE"
+  - "mixture of experts"
+  - "GRPO"
+  - "chain of thought"
+  - "CoT"
+  - "GPT-4"
+  - "GPT-5"
+  - "o1"
+  - "o3"
+  - "Anthropic"
+  - "OpenAI"
