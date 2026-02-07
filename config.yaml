@@ -56,7 +56,7 @@ llm:
   top_n: 10
 
 tts:
-  voice: "en-US-AriaNeural"
+  voice: "zh-CN-XiaoxiaoNeural"
   rate: "+10%"
 
 output:

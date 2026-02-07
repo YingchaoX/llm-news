@@ -45,22 +45,22 @@ def _call_llm(llm_config: LlmConfig, settings: Settings, prompt: str) -> str:
 # ---------------------------------------------------------------------------
 
 _SUMMARIZE_PROMPT = """\
-You are an expert AI/LLM news curator. Given the following {count} news items,
-for EACH item return a JSON object with:
-- "index": the item's index (0-based)
-- "summary": a concise 1-2 sentence English summary highlighting what's new/important
-- "score": an importance score from 1 to 10 (10 = groundbreaking, 1 = minor)
+你是一位专业的 AI/LLM 新闻编辑。给定以下 {count} 条新闻，
+请为每条新闻返回一个 JSON 对象，包含：
+- "index": 新闻的索引（从 0 开始）
+- "summary": 简洁的 1-2 句中文摘要，突出新闻的关键信息和重要性
+- "score": 重要性评分（1-10 分，10 = 重大突破，1 = 次要信息）
 
-Scoring guidelines:
-- 9-10: Major model release, breakthrough paper, significant API change
-- 7-8: Notable research, important library update, industry news
-- 5-6: Interesting but incremental progress
-- 3-4: Minor updates, routine releases
-- 1-2: Tangentially related, low impact
+评分标准：
+- 9-10: 重大模型发布、突破性论文、重要 API 变更
+- 7-8: 值得关注的研究、重要库更新、行业新闻
+- 5-6: 有趣但属于渐进式进展
+- 3-4: 小更新、常规发布
+- 1-2: 边缘相关、影响较小
 
-Return ONLY a JSON array. No markdown fences, no extra text.
+仅返回 JSON 数组，不要 markdown 代码块，不要额外文字。
 
-Items:
+新闻列表：
 {items_text}
 """
 
@@ -111,20 +111,20 @@ def _parse_summary_response(
 # ---------------------------------------------------------------------------
 
 _SCRIPT_PROMPT = """\
-You are a professional AI tech news anchor. Generate an English broadcast script
-for today's ({today}) Top {n} AI/LLM news.
+你是一位专业的 AI 科技新闻主播。请为今天（{today}）的 Top {n} AI/LLM 新闻生成一篇中文播报稿。
 
-Requirements:
-- Duration: approximately 5-10 minutes when read aloud
-- Start with a brief greeting and date
-- Cover each item with: title/headline → what happened → why it matters
-- Use clear transitions between items
-- End with a brief closing
-- Tone: informative, engaging, slightly conversational
-- Do NOT use markdown formatting, bullet points, or special characters
-- Write plain text suitable for text-to-speech
+要求：
+- 朗读时长约 5-10 分钟
+- 开头简短问候并说明日期
+- 每条新闻包含：标题/要点 → 发生了什么 → 为什么重要
+- 新闻之间使用自然的过渡语句
+- 结尾简短收尾
+- 语气：专业、有吸引力、略带对话感
+- 不要使用 markdown 格式、项目符号或特殊字符
+- 输出纯文本，适合语音合成朗读
+- 英文专有名词（如模型名、库名）保留原文
 
-Items to cover:
+播报内容：
 {items_text}
 """
 

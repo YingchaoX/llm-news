@@ -17,11 +17,11 @@ def _generate_markdown(report: DailyReport) -> str:
     """Generate a Markdown daily report."""
     lines: list[str] = []
 
-    lines.append(f"# LLM News Daily Report - {report.date}")
+    lines.append(f"# LLM 每日资讯 - {report.date}")
     lines.append("")
     lines.append(
-        f"> Collected {report.total_collected} items, "
-        f"showing Top {len(report.top_items)} after dedup & ranking."
+        f"> 共采集 {report.total_collected} 条，"
+        f"去重排序后精选 Top {len(report.top_items)}。"
     )
     lines.append("")
     lines.append("---")
@@ -31,11 +31,11 @@ def _generate_markdown(report: DailyReport) -> str:
         score_bar = "★" * int(item.score) + "☆" * (10 - int(item.score))
         lines.append(f"## {i}. {item.title}")
         lines.append("")
-        lines.append(f"**Source**: `{item.source}` / {item.source_name}  ")
-        lines.append(f"**Score**: {item.score:.1f}/10 {score_bar}  ")
+        lines.append(f"**来源**: `{item.source}` / {item.source_name}  ")
+        lines.append(f"**评分**: {item.score:.1f}/10 {score_bar}  ")
         if item.published_at:
-            lines.append(f"**Published**: {item.published_at.strftime('%Y-%m-%d %H:%M UTC')}  ")
-        lines.append(f"**Link**: [{item.url}]({item.url})")
+            lines.append(f"**发布时间**: {item.published_at.strftime('%Y-%m-%d %H:%M UTC')}  ")
+        lines.append(f"**链接**: [{item.url}]({item.url})")
         lines.append("")
         if item.summary:
             lines.append(f"> {item.summary}")

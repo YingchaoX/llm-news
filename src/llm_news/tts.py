@@ -21,7 +21,7 @@ async def _generate(text: str, voice: str, rate: str, output_path: Path) -> None
 def generate_audio(
     text: str,
     output_path: str | Path,
-    voice: str = "en-US-AriaNeural",
+    voice: str = "zh-CN-XiaoxiaoNeural",
     rate: str = "+10%",
 ) -> Path:
     """Generate MP3 audio from text.
