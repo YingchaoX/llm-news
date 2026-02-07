@@ -47,11 +47,11 @@ sources:
 llm:
   # OpenRouter: https://openrouter.ai/models?q=free
   # 免费模型推荐（:free 后缀 = $0）:
-  #   deepseek/deepseek-chat-v3:free      ← 当前使用，DeepSeek V3
+  #   deepseek/deepseek-r1-0528:free      ← 当前使用
+  #   deepseek/deepseek-chat-v3:free
   #   meta-llama/llama-3.3-70b-instruct:free
-  #   qwen/qwen3-coder:free
   #   google/gemma-3-27b-it:free          ← 容易被上游限流
-  model: "deepseek/deepseek-chat-v3:free"
+  model: "deepseek/deepseek-r1-0528:free"
   base_url: "https://openrouter.ai/api/v1"
   top_n: 10
 

@@ -29,3 +29,4 @@ class DailyReport(BaseModel):
     script: str = ""  # broadcast script for TTS
     total_collected: int = 0
     total_after_dedup: int = 0
+    llm_ok: bool = False  # LLM 是否成功处理，失败时不应更新 history

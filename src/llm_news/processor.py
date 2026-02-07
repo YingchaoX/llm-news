@@ -217,4 +217,5 @@ def process(
         script=script,
         total_collected=len(items),
         total_after_dedup=len(items),
+        llm_ok=llm_ok and bool(script),
     )

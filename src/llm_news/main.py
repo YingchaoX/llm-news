@@ -156,10 +156,16 @@ def run(config_path: str = "config.yaml") -> None:
     else:
         logger.warning("No script generated, skipping audio")
 
-    # 6. Update history
+    # 6. Update history (only when LLM succeeded, otherwise retry next run)
     logger.info("--- Phase 5: Updating History ---")
-    new_urls = {item.url for item in items}
-    save_history(history | new_urls)
+    if report.llm_ok:
+        new_urls = {item.url for item in items}
+        save_history(history | new_urls)
+    else:
+        logger.warning(
+            "Skipping history update because LLM processing failed — "
+            "items will be re-processed on next run"
+        )
 
     # Done
     logger.info("=" * 60)
