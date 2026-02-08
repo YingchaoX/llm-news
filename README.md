@@ -35,7 +35,7 @@ cp .env.example .env
 | `REDDIT_CLIENT_ID` | [Reddit Apps](https://www.reddit.com/prefs/apps) Client ID | 是 |
 | `REDDIT_CLIENT_SECRET` | Reddit Client Secret | 是 |
 | `GITHUB_TOKEN` | GitHub Token（提升速率限制） | 否 |
-| `BARK_DEVICE_KEY` | [Bark](https://apps.apple.com/app/bark/id1403753865) 推送 Key | 否 |
+| `BARK_DEVICE_KEY` | [Bark](https://github.com/Finb/Bark) 推送 Key（[获取方式见下方](#bark-推送)） | 否 |
 
 ### 3. 运行
 
@@ -88,6 +88,17 @@ output/2026-02-07/
 4. Actions 将自动运行并部署报告
 
 也支持手动触发（`workflow_dispatch`）。
+
+## Bark 推送
+
+[Bark](https://github.com/Finb/Bark) 是一款免费的 iOS 推送工具，可在每日报告生成后向手机发送通知。
+
+1. 在 App Store 下载 [Bark](https://apps.apple.com/app/bark/id1403753865)
+2. 打开 App，复制首页显示的 **Device Key**
+3. 将 Key 填入 `.env` 的 `BARK_DEVICE_KEY`（或 GitHub Secrets）
+4. 确保 `config.yaml` 中 `push.bark_enabled: true`
+
+更多详情参考 [Bark 官方文档](https://github.com/Finb/Bark)。
 
 ## 技术栈
 
