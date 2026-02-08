@@ -54,7 +54,7 @@ layout: default
 📂 `hackernews` / Hacker News &nbsp;&nbsp; ⭐ **190.0/10** ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
  &nbsp;&nbsp; 📅 2026-02-07 15:05 UTC
 
-> [HN Score: 190, Comments: 335] See also <a href="https:&#x2F;&#x2F;simonwillison.net&#x2F;2026&#x2F;Feb&#x2F;7&#x2F;software-factory&#x2F;" rel="nofollow">https:&#x2F;&#x2F;simonwillison.net&#x2F;2026...
+> [HN Score: 190, Comments: 340] See also <a href="https:&#x2F;&#x2F;simonwillison.net&#x2F;2026&#x2F;Feb&#x2F;7&#x2F;software-factory&#x2F;" rel="nofollow">https:&#x2F;&#x2F;simonwillison.net&#x2F;2026...
 
 [🔗 查看原文](https://factory.strongdm.ai/)
 
@@ -62,49 +62,27 @@ layout: default
 
 ### 5. Show HN: LocalGPT – A local-first AI assistant in Rust with persistent memory
 
-📂 `hackernews` / Hacker News &nbsp;&nbsp; ⭐ **104.0/10** ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+📂 `hackernews` / Hacker News &nbsp;&nbsp; ⭐ **105.0/10** ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
  &nbsp;&nbsp; 📅 2026-02-08 01:26 UTC
 
-> [HN Score: 104, Comments: 29] I built LocalGPT over 4 nights as a Rust reimagining of the OpenClaw assistant pattern (markdown-based persistent memory, autonomous heartbeat tasks, skills system).<p>It...
+> [HN Score: 105, Comments: 29] I built LocalGPT over 4 nights as a Rust reimagining of the OpenClaw assistant pattern (markdown-based persistent memory, autonomous heartbeat tasks, skills system).<p>It...
 
 [🔗 查看原文](https://github.com/localgpt-app/localgpt)
 
 ---
 
-### 6. CAR-bench: Evaluating the Consistency and Limit-Awareness of LLM Agents under Real-World Uncertainty
-
-📂 `hf_papers` / HF Daily Papers &nbsp;&nbsp; ⭐ **69.0/10** ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
- &nbsp;&nbsp; 📅 2026-01-29 12:33 UTC
-
-> Existing benchmarks for Large Language Model (LLM) agents focus on task completion under idealistic settings but overlook reliability in real-world, user-facing applications. In domains, such as in-ca...
-
-[🔗 查看原文](https://huggingface.co/papers/2601.22027)
-
----
-
-### 7. Spider-Sense: Intrinsic Risk Sensing for Efficient Agent Defense with Hierarchical Adaptive Screening
-
-📂 `hf_papers` / HF Daily Papers &nbsp;&nbsp; ⭐ **63.0/10** ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
- &nbsp;&nbsp; 📅 2026-02-05 02:11 UTC
-
-> As large language models (LLMs) evolve into autonomous agents, their real-world applicability has expanded significantly, accompanied by new security challenges. Most existing agent defense mechanisms...
-
-[🔗 查看原文](https://huggingface.co/papers/2602.05386)
-
----
-
-### 8. LLMs as the new high level language
+### 6. LLMs as the new high level language
 
 📂 `hackernews` / Hacker News &nbsp;&nbsp; ⭐ **58.0/10** ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
  &nbsp;&nbsp; 📅 2026-02-03 10:00 UTC
 
-> [HN Score: 58, Comments: 105] ...
+> [HN Score: 58, Comments: 106] ...
 
 [🔗 查看原文](https://federicopereiro.com/llm-high/)
 
 ---
 
-### 9. Haskell for all: Beyond agentic coding
+### 7. Haskell for all: Beyond agentic coding
 
 📂 `hackernews` / Hacker News &nbsp;&nbsp; ⭐ **46.0/10** ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
  &nbsp;&nbsp; 📅 2026-02-08 01:55 UTC
@@ -115,14 +93,36 @@ layout: default
 
 ---
 
-### 10. MemSkill: Learning and Evolving Memory Skills for Self-Evolving Agents
+### 8. Show HN: Craftplan – Elixir-based micro-ERP for small-scale manufacturers
 
-📂 `hf_papers` / HF Daily Papers &nbsp;&nbsp; ⭐ **43.0/10** ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
- &nbsp;&nbsp; 📅 2026-02-02 13:53 UTC
+📂 `hackernews` / Hacker News &nbsp;&nbsp; ⭐ **16.0/10** ★★★★★★★★★★★★★★★★
+ &nbsp;&nbsp; 📅 2026-02-03 11:01 UTC
 
-> Most Large Language Model (LLM) agent memory systems rely on a small set of static, hand-designed operations for extracting memory. These fixed procedures hard-code human priors about what to store an...
+> [HN Score: 16, Comments: 4] My wife was planning to open a micro-bakery and we started looking at software to manage recipes, inventory, orders, and production. Everything was either expensive, too ge...
 
-[🔗 查看原文](https://huggingface.co/papers/2602.02474)
+[🔗 查看原文](https://puemos.github.io/craftplan/)
+
+---
+
+### 9. DARWIN: Dynamic Agentically Rewriting Self-Improving Network
+
+📂 `arxiv` / NE, AI, CL &nbsp;&nbsp; ⭐ **9.0/10** ★★★★★★★★★☆
+ &nbsp;&nbsp; 📅 2026-02-05 16:35 UTC
+
+> DARWIN是进化GPT模型，利用遗传算法结构让多个独立GPT代理互相修改训练代码实现自我改进
+
+[🔗 查看原文](http://arxiv.org/abs/2602.05848v1)
+
+---
+
+### 10. Introducing OpenAI Frontier
+
+📂 `blog` / OpenAI &nbsp;&nbsp; ⭐ **9.0/10** ★★★★★★★★★☆
+ &nbsp;&nbsp; 📅 2026-02-05 06:00 UTC
+
+> OpenAI Frontier是用于构建、部署和管理AI代理的企业平台，提供共享上下文、入职、权限和治理
+
+[🔗 查看原文](https://openai.com/index/introducing-openai-frontier)
 
 ---
 
