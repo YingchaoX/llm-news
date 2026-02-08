@@ -4,7 +4,17 @@
 sources:
   arxiv:
     categories: ["cs.CL", "cs.AI", "cs.LG"]
-    max_results: 50
+    max_results: 200  # 增大搜索量以补偿机构过滤损耗
+    require_institution: true  # 仅保留知名大学/公司的论文（扫描摘要/comment匹配机构名）
+
+  hf_papers:
+    enabled: true
+    limit: 30  # HF Daily Papers 社区精选论文
+
+  hackernews:
+    enabled: true
+    story_type: "topstories"  # topstories / beststories / newstories
+    limit: 60  # 扫描前60条，按关键词过滤
 
   blogs:
     - name: "OpenAI"
@@ -61,6 +71,16 @@ tts:
 
 output:
   dir: "output"
+
+push:
+  enabled: true
+  # GitHub Pages URL — 部署后请替换为你的实际地址
+  # 格式: https://<username>.github.io/<repo-name>
+  site_url: "https://yingchaox.github.io/llm-news"
+  # Bark push (iOS 推送通知)
+  # 1. App Store 下载 Bark: https://apps.apple.com/app/bark/id1403753865
+  # 2. 打开 App 复制 Device Key 填入 .env 的 BARK_DEVICE_KEY
+  bark_enabled: true
 
 keywords:
   - "LLM"

@@ -14,6 +14,7 @@ from pydantic_settings import BaseSettings
 class ArxivConfig(BaseModel):
     categories: list[str] = ["cs.CL", "cs.AI", "cs.LG"]
     max_results: int = 50
+    require_institution: bool = True  # 仅保留知名大学/公司的论文
 
 
 class BlogSource(BaseModel):
@@ -37,12 +38,25 @@ class RedditConfig(BaseModel):
     limit: int = 25
 
 
+class HfPapersConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 30
+
+
+class HackerNewsConfig(BaseModel):
+    enabled: bool = True
+    story_type: str = "topstories"
+    limit: int = 60
+
+
 class SourcesConfig(BaseModel):
     arxiv: ArxivConfig = ArxivConfig()
     blogs: list[BlogSource] = []
     github: GithubConfig = GithubConfig()
     twitter: TwitterConfig = TwitterConfig()
     reddit: RedditConfig = RedditConfig()
+    hf_papers: HfPapersConfig = HfPapersConfig()
+    hackernews: HackerNewsConfig = HackerNewsConfig()
 
 
 class LlmConfig(BaseModel):
@@ -61,6 +75,16 @@ class OutputConfig(BaseModel):
     dir: str = "output"
 
 
+class PushConfig(BaseModel):
+    """Push notification config / 推送通知配置."""
+
+    enabled: bool = False
+    # GitHub Pages base URL (e.g. https://user.github.io/llm-news)
+    site_url: str = ""
+    # Bark push (iOS)
+    bark_enabled: bool = False
+
+
 class AppConfig(BaseModel):
     """Application config loaded from config.yaml."""
 
@@ -68,6 +92,7 @@ class AppConfig(BaseModel):
     llm: LlmConfig = LlmConfig()
     tts: TtsConfig = TtsConfig()
     output: OutputConfig = OutputConfig()
+    push: PushConfig = PushConfig()
     keywords: list[str] = []
 
 
@@ -82,6 +107,7 @@ class Settings(BaseSettings):
     reddit_client_id: str = ""
     reddit_client_secret: str = ""
     github_token: str = ""
+    bark_device_key: str = ""  # Bark push notification / iOS 推送
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

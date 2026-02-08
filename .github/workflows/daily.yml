@@ -2,12 +2,14 @@ name: Daily LLM News
 
 on:
   schedule:
-    # Run daily at 08:00 UTC (adjust to your timezone)
-    - cron: "0 8 * * *"
+    # Run daily at 08:00 Beijing Time (UTC+8) = 00:00 UTC
+    - cron: "0 0 * * *"
   workflow_dispatch:  # Allow manual trigger
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   generate:
@@ -27,12 +29,28 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Restore previous GitHub Pages
+        run: |
+          # 从 gh-pages 分支恢复历史页面，保留所有日期的报告
+          git fetch origin gh-pages --depth=1 || true
+          if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+            git worktree add /tmp/gh-pages origin/gh-pages
+            mkdir -p pages
+            cp -r /tmp/gh-pages/* pages/ 2>/dev/null || true
+            rm -rf pages/.git
+            git worktree remove /tmp/gh-pages --force
+            echo "Restored existing pages from gh-pages branch"
+          else
+            echo "No gh-pages branch found, starting fresh"
+          fi
+
       - name: Run LLM News
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BARK_DEVICE_KEY: ${{ secrets.BARK_DEVICE_KEY }}
         run: uv run llm-news
 
       - name: Upload output as artifact
@@ -41,6 +59,14 @@ jobs:
           name: llm-news-${{ github.run_id }}
           path: output/
           retention-days: 30
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages
+          keep_files: true
 
       - name: Commit history update
         run: |

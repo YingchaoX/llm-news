@@ -13,6 +13,8 @@ from .collectors import (
     arxiv_collector,
     blog_collector,
     github_collector,
+    hackernews_collector,
+    hf_papers_collector,
     reddit_collector,
     twitter_collector,
 )
@@ -20,7 +22,9 @@ from .config import AppConfig, Settings, load_config
 from .dedup import deduplicate, load_history, save_history
 from .models import NewsItem
 from .output import save_report
+from .pages import build_pages
 from .processor import process
+from .push import push_report
 from .tts import generate_audio
 
 logger = logging.getLogger(__name__)
@@ -50,6 +54,7 @@ def _collect_all(config: AppConfig, settings: Settings) -> list[NewsItem]:
             categories=src.arxiv.categories,
             max_results=src.arxiv.max_results,
             keywords=keywords,
+            require_institution=src.arxiv.require_institution,
         )
 
     def run_blogs() -> list[NewsItem]:
@@ -80,12 +85,33 @@ def _collect_all(config: AppConfig, settings: Settings) -> list[NewsItem]:
             keywords=keywords,
         )
 
+    def run_hf_papers() -> list[NewsItem]:
+        if not src.hf_papers.enabled:
+            logger.info("HF Papers collector is disabled, skipping")
+            return []
+        return hf_papers_collector.collect(
+            limit=src.hf_papers.limit,
+            keywords=keywords,
+        )
+
+    def run_hackernews() -> list[NewsItem]:
+        if not src.hackernews.enabled:
+            logger.info("Hacker News collector is disabled, skipping")
+            return []
+        return hackernews_collector.collect(
+            story_type=src.hackernews.story_type,
+            limit=src.hackernews.limit,
+            keywords=keywords,
+        )
+
     tasks = {
         "arxiv": run_arxiv,
         "blogs": run_blogs,
         "github": run_github,
         "twitter": run_twitter,
         "reddit": run_reddit,
+        "hf_papers": run_hf_papers,
+        "hackernews": run_hackernews,
     }
 
     with ThreadPoolExecutor(max_workers=5) as executor:
@@ -156,8 +182,34 @@ def run(config_path: str = "config.yaml") -> None:
     else:
         logger.warning("No script generated, skipping audio")
 
-    # 6. Update history (only when LLM succeeded, otherwise retry next run)
-    logger.info("--- Phase 5: Updating History ---")
+    # 6. Build GitHub Pages (HTML + audio)
+    if config.push.enabled and config.push.site_url:
+        logger.info("--- Phase 5: Building GitHub Pages ---")
+        try:
+            build_pages(
+                report=report,
+                site_url=config.push.site_url,
+                output_dir=config.output.dir,
+            )
+        except Exception:
+            logger.exception("GitHub Pages build failed")
+
+    # 7. Bark push notification (iOS)
+    if config.push.enabled and config.push.bark_enabled:
+        logger.info("--- Phase 6: Sending Bark Push ---")
+        try:
+            push_report(
+                device_key=settings.bark_device_key,
+                report_date=report.date,
+                top_count=len(report.top_items),
+                total_collected=report.total_collected,
+                site_url=config.push.site_url,
+            )
+        except Exception:
+            logger.exception("Bark push failed")
+
+    # 8. Update history (only when LLM succeeded, otherwise retry next run)
+    logger.info("--- Phase 7: Updating History ---")
     if report.llm_ok:
         new_urls = {item.url for item in items}
         save_history(history | new_urls)
@@ -174,6 +226,8 @@ def run(config_path: str = "config.yaml") -> None:
     logger.info("  - daily_report.mp3")
     logger.info("  - raw_items.json")
     logger.info("  - broadcast_script.txt")
+    if config.push.enabled:
+        logger.info("  - pages/ (GitHub Pages)")
     logger.info("=" * 60)
 
 

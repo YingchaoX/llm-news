@@ -10,7 +10,7 @@ class NewsItem(BaseModel):
 
     title: str
     url: str
-    source: str  # arxiv, blog, github, twitter, reddit
+    source: str  # arxiv, blog, github, twitter, reddit, hf_papers, hackernews
     source_name: str  # e.g. "OpenAI Blog", "arXiv"
     content: str = ""  # original content / abstract
     summary: str = ""  # LLM-generated summary
