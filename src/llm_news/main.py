@@ -7,7 +7,6 @@ Orchestrates the full pipeline:
 import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import date
 
 from .collectors import (
     arxiv_collector,
@@ -163,9 +162,16 @@ def run(config_path: str = "config.yaml") -> None:
     report.total_collected = len(all_items)
     report.total_after_dedup = len(items)
 
+    # LLM 失败时终止流程，不生成半成品报告；下次运行会重新处理这些条目
+    if not report.llm_ok:
+        logger.error(
+            "Pipeline aborted: LLM processing failed. "
+            "Items will be re-processed on next run."
+        )
+        sys.exit(1)
+
     # 5. Generate audio
     logger.info("--- Phase 4: Generating Audio ---")
-    today = date.today().isoformat()
     day_dir = save_report(report, output_dir=config.output.dir)
 
     if report.script:
@@ -208,16 +214,10 @@ def run(config_path: str = "config.yaml") -> None:
         except Exception:
             logger.exception("Bark push failed")
 
-    # 8. Update history (only when LLM succeeded, otherwise retry next run)
+    # 8. Update history
     logger.info("--- Phase 7: Updating History ---")
-    if report.llm_ok:
-        new_urls = {item.url for item in items}
-        save_history(history | new_urls)
-    else:
-        logger.warning(
-            "Skipping history update because LLM processing failed — "
-            "items will be re-processed on next run"
-        )
+    new_urls = {item.url for item in items}
+    save_history(history | new_urls)
 
     # Done
     logger.info("=" * 60)

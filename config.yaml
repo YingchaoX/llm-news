@@ -61,8 +61,8 @@ llm:
   #   deepseek/deepseek-chat-v3:free
   #   meta-llama/llama-3.3-70b-instruct:free
   #   google/gemma-3-27b-it:free          ← 容易被上游限流
-  #   qwen/qwen3-coder:free              ← 当前使用
-  model: "qwen/qwen3-coder:free"
+  #   qwen/qwen3-coder:free
+  model: "z-ai/glm-4.5-air:free"
   base_url: "https://openrouter.ai/api/v1"
   top_n: 10
 
