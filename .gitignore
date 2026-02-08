@@ -13,6 +13,9 @@ build/
 output/
 pages/
 
+# Runtime state (each user/fork maintains its own via CI cache)
+data/history.json
+
 # IDE
 .idea/
 .vscode/
