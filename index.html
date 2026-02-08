@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM 每日资讯</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #f8f9fa;
+      padding: 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #1a1a2e; color: #e0e0e0; }
+      .news-item { background: #16213e; }
+      blockquote { background: #0f3460; border-color: #e94560; }
+      .audio-player { background: #16213e; }
+      a { color: #64b5f6; }
+      .index-list li { border-color: #333; }
+    }
+    header { text-align: center; padding: 20px 0; }
+    header h1 { font-size: 1.5em; }
+    .date { font-size: 1.2em; color: #666; margin-top: 4px; }
+    .stats { font-size: 0.9em; color: #888; margin-top: 4px; }
+
+    .audio-player {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .audio-player h3 { margin-bottom: 8px; font-size: 1em; }
+
+    .news-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .news-item h2 { font-size: 1.05em; margin-bottom: 8px; }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .meta { font-size: 0.8em; color: #888; }
+    blockquote {
+      background: #f0f4f8;
+      border-left: 3px solid #4a90d9;
+      padding: 10px 12px;
+      margin: 8px 0;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    .news-item a { font-size: 0.85em; color: #4a90d9; text-decoration: none; }
+    .news-item a:hover { text-decoration: underline; }
+
+    .index-list ul { list-style: none; padding: 0; }
+    .index-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .index-list a {
+      font-size: 1.1em;
+      color: #4a90d9;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .index-list a:hover { text-decoration: underline; }
+
+    footer {
+      text-align: center;
+      padding: 24px 0;
+      font-size: 0.85em;
+      color: #888;
+    }
+    footer a { color: #4a90d9; text-decoration: none; margin-bottom: 8px; display: inline-block; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🤖 LLM 每日资讯</h1>
+    <p class="stats">每日自动聚合 LLM / AI 领域最新动态</p>
+  </header>
+
+  <main>
+    <section class="index-list">
+      <h2>📅 历史日报</h2>
+      <ul>
+    <li><a href="https://yingchaox.github.io/llm-news/2026-02-08/">2026-02-08</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Powered by <strong>LLM News</strong> · Auto-generated</p>
+  </footer>
+</body>
+</html>
