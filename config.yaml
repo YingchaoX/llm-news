@@ -3,65 +3,106 @@
 
 sources:
   arxiv:
+    enabled: true
     categories: ["cs.CL", "cs.AI", "cs.LG"]
     max_results: 200  # 增大搜索量以补偿机构过滤损耗
-    require_institution: true  # 仅保留知名大学/公司的论文（扫描摘要/comment匹配机构名）
+    require_institution: true  # 仅保留知名大学/公司的论文
 
   hf_papers:
     enabled: true
     limit: 30  # HF Daily Papers 社区精选论文
 
+  hf_models:
+    enabled: true
+    limit: 50
+    orgs:
+      # === 中国大模型公司 ===
+      - "deepseek-ai"      # DeepSeek
+      - "Qwen"             # 阿里 Qwen
+      - "zai-org"          # 智谱 GLM (Z.ai)
+      - "MiniMaxAI"        # MiniMax
+      - "stepfun-ai"       # 阶跃星辰 Step
+      - "baichuan-inc"     # 百川智能
+      # === 海外大模型公司 ===
+      - "meta-llama"       # Meta LLaMA
+      - "mistralai"        # Mistral
+      - "google"           # Google Gemma
+      - "microsoft"        # Microsoft Phi
+      - "openai"           # OpenAI
+      - "nvidia"           # NVIDIA
+      - "apple"            # Apple
+
+  pwc:
+    enabled: false  # PwC API 已停用（302 → HuggingFace），由 HF Papers + HF Models 覆盖
+    limit: 50
+
+  github_trending:
+    enabled: true
+    period: "past_24_hours"
+    language: "Python"  # AI 项目主要语言
+
   hackernews:
     enabled: true
-    story_type: "topstories"  # topstories / beststories / newstories
-    limit: 60  # 扫描前60条，按关键词过滤
+    story_type: "topstories"
+    limit: 60
 
-  blogs:
-    - name: "OpenAI"
-      url: "https://openai.com/news/rss.xml"
-    - name: "Google AI"
-      url: "https://blog.google/technology/ai/rss/"
-    - name: "Hugging Face"
-      url: "https://huggingface.co/blog/feed.xml"
-    - name: "Microsoft Research"
-      url: "https://www.microsoft.com/en-us/research/feed/"
-    # Anthropic / DeepSeek / Meta AI 无可用公开 RSS，通过 GitHub releases 和 arXiv 覆盖
+  blog:
+    enabled: true
+    feeds:
+      # === 海外 AI 公司官方博客（一手源） ===
+      - name: "OpenAI"
+        url: "https://openai.com/news/rss.xml"
+      - name: "Google AI"
+        url: "https://blog.google/technology/ai/rss/"
+      - name: "Hugging Face"
+        url: "https://huggingface.co/blog/feed.xml"
+      - name: "Microsoft Research"
+        url: "https://www.microsoft.com/en-us/research/feed/"
+      - name: "Meta Research"
+        url: "https://research.facebook.com/feed/"
+      - name: "DeepMind"
+        url: "https://deepmind.google/blog/rss.xml"
+      - name: "NVIDIA AI"
+        url: "https://blogs.nvidia.com/feed/"
+      - name: "Apple ML"
+        url: "https://machinelearning.apple.com/rss.xml"
+      # Anthropic / DeepSeek / Qwen 等中国公司无 RSS，通过 HF Models + GitHub releases 覆盖
 
   github:
+    enabled: true
     repos:
+      # === 推理框架 / Inference ===
       - "vllm-project/vllm"
       - "sgl-project/sglang"
-      - "meta-llama/llama-models"
-      - "deepseek-ai/DeepSeek-V3"
-      - "QwenLM/Qwen2.5"
-      - "huggingface/transformers"
       - "ggerganov/llama.cpp"
       - "ollama/ollama"
+      # === 中国大模型公司 ===
+      - "deepseek-ai/DeepSeek-V3"
+      - "deepseek-ai/DeepSeek-R1"
+      - "deepseek-ai/open-infra-index"
+      - "QwenLM/Qwen3"
+      - "QwenLM/Qwen2.5"
+      - "QwenLM/Qwen-Agent"
+      - "THUDM/GLM-4"
+      - "zai-org/ai-infra"
+      - "MiniMaxAI/MiniMax-01"
+      # === 海外大模型 ===
+      - "meta-llama/llama-models"
+      - "mistralai/mistral-common"
+      # === 核心生态库 ===
+      - "huggingface/transformers"
       - "openai/openai-python"
       - "langchain-ai/langchain"
       - "run-llama/llama_index"
 
-  twitter:
-    enabled: false  # Nitter RSS is unreliable; enable at your own risk
-    kol_list:
-      - "_akhaliq"
-      - "kaboroevich"
-      - "ylaborroevich"
-    nitter_instance: "https://nitter.privacydev.net"
-
   reddit:
+    enabled: true
     subreddits: ["MachineLearning", "LocalLLaMA"]
     time_filter: "day"
     limit: 25
 
 llm:
   # OpenRouter: https://openrouter.ai/models?q=free
-  # 免费模型推荐（:free 后缀 = $0）:
-  #   z-ai/glm-4.5-air:free               ← 稳定可靠
-  #   deepseek/deepseek-chat-v3:free
-  #   meta-llama/llama-3.3-70b-instruct:free
-  #   google/gemma-3-27b-it:free          ← 容易被上游限流
-  #   qwen/qwen3-coder:free
   model: "z-ai/glm-4.5-air:free"
   base_url: "https://openrouter.ai/api/v1"
   top_n: 10
@@ -75,12 +116,7 @@ output:
 
 push:
   enabled: true
-  # GitHub Pages URL — 部署后请替换为你的实际地址
-  # 格式: https://<username>.github.io/<repo-name>
   site_url: "https://yingchaox.github.io/llm-news"
-  # Bark push (iOS 推送通知)
-  # 1. App Store 下载 Bark: https://apps.apple.com/app/bark/id1403753865
-  # 2. 打开 App 复制 Device Key 填入 .env 的 BARK_DEVICE_KEY
   bark_enabled: true
 
 keywords:
@@ -126,3 +162,7 @@ keywords:
   - "o3"
   - "Anthropic"
   - "OpenAI"
+  - "GLM"
+  - "ChatGLM"
+  - "MiniMax"
+  - "StepFun"

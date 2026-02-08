@@ -10,80 +10,80 @@ from datetime import datetime, timezone
 import httpx
 
 from ..models import NewsItem
+from .base import BaseCollector
 
 logger = logging.getLogger(__name__)
 
 GITHUB_API = "https://api.github.com"
 
 
-def _get_headers(token: str) -> dict[str, str]:
-    headers = {"Accept": "application/vnd.github+json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    return headers
+class GithubCollector(BaseCollector):
+    """GitHub release collector.
 
-
-def collect(
-    repos: list[str],
-    token: str = "",
-    keywords: list[str] | None = None,
-) -> list[NewsItem]:
-    """Collect recent releases from GitHub repos.
-
-    Args:
-        repos: List of "owner/repo" strings.
-        token: GitHub personal access token (optional).
-        keywords: Not used for GitHub (repos are already curated).
-
-    Returns:
-        List of NewsItem from GitHub releases.
+    追踪指定仓库的 Release 信息。
     """
-    items: list[NewsItem] = []
-    headers = _get_headers(token)
 
-    with httpx.Client(timeout=30, headers=headers, follow_redirects=True) as client:
-        for repo in repos:
-            logger.info("Fetching GitHub releases: %s", repo)
-            try:
-                # Get latest releases
-                resp = client.get(
-                    f"{GITHUB_API}/repos/{repo}/releases",
-                    params={"per_page": 5},
-                )
-                if resp.status_code == 404:
-                    # Try tags instead (some repos don't use releases)
-                    logger.debug("No releases for %s, trying tags", repo)
-                    continue
-                resp.raise_for_status()
+    name = "github"
 
-                for release in resp.json():
-                    tag = release.get("tag_name", "")
-                    name = release.get("name", "") or tag
-                    body = release.get("body", "") or ""
-                    html_url = release.get("html_url", "")
-                    published_str = release.get("published_at", "")
+    def __init__(
+        self,
+        repos: list[str] | None = None,
+        token: str = "",
+    ) -> None:
+        self.repos = repos or []
+        self.token = token
 
-                    published_at = None
-                    if published_str:
-                        try:
-                            published_at = datetime.fromisoformat(
-                                published_str.replace("Z", "+00:00")
-                            )
-                        except ValueError:
-                            pass
+    def _get_headers(self) -> dict[str, str]:
+        headers = {"Accept": "application/vnd.github+json"}
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+        return headers
 
-                    item = NewsItem(
-                        title=f"{repo} {name}",
-                        url=html_url,
-                        source="github",
-                        source_name=repo,
-                        content=body[:1000],
-                        published_at=published_at,
+    def collect(self, keywords: list[str]) -> list[NewsItem]:
+        items: list[NewsItem] = []
+        headers = self._get_headers()
+
+        with httpx.Client(timeout=30, headers=headers, follow_redirects=True) as client:
+            for repo in self.repos:
+                logger.info("Fetching GitHub releases: %s", repo)
+                try:
+                    resp = client.get(
+                        f"{GITHUB_API}/repos/{repo}/releases",
+                        params={"per_page": 5},
                     )
-                    items.append(item)
+                    if resp.status_code == 404:
+                        logger.debug("No releases for %s, skipping", repo)
+                        continue
+                    resp.raise_for_status()
 
-            except Exception:
-                logger.exception("Failed to fetch releases for %s", repo)
+                    for release in resp.json():
+                        tag = release.get("tag_name", "")
+                        name = release.get("name", "") or tag
+                        body = release.get("body", "") or ""
+                        html_url = release.get("html_url", "")
+                        published_str = release.get("published_at", "")
 
-    logger.info("GitHub: collected %d releases", len(items))
-    return items
+                        published_at = None
+                        if published_str:
+                            try:
+                                published_at = datetime.fromisoformat(
+                                    published_str.replace("Z", "+00:00")
+                                )
+                            except ValueError:
+                                pass
+
+                        item = NewsItem(
+                            title=f"{repo} {name}",
+                            url=html_url,
+                            source="github",
+                            source_name=repo,
+                            content=body[:1000],
+                            published_at=published_at,
+                        )
+                        items.append(item)
+
+                except Exception:
+                    logger.exception("Failed to fetch releases for %s", repo)
+
+        logger.info("GitHub: collected %d releases", len(items))
+        return items

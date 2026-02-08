@@ -8,15 +8,7 @@ import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from .collectors import (
-    arxiv_collector,
-    blog_collector,
-    github_collector,
-    hackernews_collector,
-    hf_papers_collector,
-    reddit_collector,
-    twitter_collector,
-)
+from .collectors import REGISTRY, BaseCollector
 from .config import AppConfig, Settings, load_config
 from .dedup import deduplicate, load_history, save_history
 from .models import NewsItem
@@ -39,6 +31,106 @@ def _setup_logging() -> None:
     )
 
 
+def _build_collectors(config: AppConfig, settings: Settings) -> list[BaseCollector]:
+    """Instantiate all enabled collectors from config.
+
+    根据 config 动态实例化所有启用的 collector。
+    """
+    collectors: list[BaseCollector] = []
+    src = config.sources
+
+    # Map config sections to collector init kwargs
+    # 将配置映射到 collector 构造参数
+    collector_configs: dict[str, dict] = {
+        "arxiv": {
+            "enabled": src.arxiv.enabled,
+            "kwargs": {
+                "categories": src.arxiv.categories,
+                "max_results": src.arxiv.max_results,
+                "require_institution": src.arxiv.require_institution,
+            },
+        },
+        "blog": {
+            "enabled": src.blog.enabled,
+            "kwargs": {
+                "blogs": [
+                    {"name": b.name, "url": b.url} for b in src.blog.feeds
+                ],
+            },
+        },
+        "github": {
+            "enabled": src.github.enabled,
+            "kwargs": {
+                "repos": src.github.repos,
+                "token": settings.github_token,
+            },
+        },
+        "github_trending": {
+            "enabled": src.github_trending.enabled,
+            "kwargs": {
+                "period": src.github_trending.period,
+                "language": src.github_trending.language,
+                "token": settings.github_token,
+            },
+        },
+        "hf_papers": {
+            "enabled": src.hf_papers.enabled,
+            "kwargs": {
+                "limit": src.hf_papers.limit,
+            },
+        },
+        "hf_models": {
+            "enabled": src.hf_models.enabled,
+            "kwargs": {
+                "orgs": src.hf_models.orgs,
+                "limit": src.hf_models.limit,
+            },
+        },
+        "pwc": {
+            "enabled": src.pwc.enabled,
+            "kwargs": {
+                "limit": src.pwc.limit,
+            },
+        },
+        "hackernews": {
+            "enabled": src.hackernews.enabled,
+            "kwargs": {
+                "story_type": src.hackernews.story_type,
+                "limit": src.hackernews.limit,
+            },
+        },
+        "reddit": {
+            "enabled": src.reddit.enabled,
+            "kwargs": {
+                "subreddits": src.reddit.subreddits,
+                "client_id": settings.reddit_client_id,
+                "client_secret": settings.reddit_client_secret,
+                "time_filter": src.reddit.time_filter,
+                "limit": src.reddit.limit,
+            },
+        },
+    }
+
+    for name, cfg in collector_configs.items():
+        if not cfg["enabled"]:
+            logger.info("Collector %s is disabled, skipping", name)
+            continue
+
+        cls = REGISTRY.get(name)
+        if cls is None:
+            logger.warning("Unknown collector: %s (not in registry)", name)
+            continue
+
+        try:
+            collector = cls(**cfg["kwargs"])
+            collectors.append(collector)
+            logger.debug("Initialized collector: %s", collector)
+        except Exception:
+            logger.exception("Failed to initialize collector: %s", name)
+
+    return collectors
+
+
 def _collect_all(config: AppConfig, settings: Settings) -> list[NewsItem]:
     """Run all collectors in parallel threads.
 
@@ -46,75 +138,18 @@ def _collect_all(config: AppConfig, settings: Settings) -> list[NewsItem]:
     """
     all_items: list[NewsItem] = []
     keywords = config.keywords
-    src = config.sources
 
-    def run_arxiv() -> list[NewsItem]:
-        return arxiv_collector.collect(
-            categories=src.arxiv.categories,
-            max_results=src.arxiv.max_results,
-            keywords=keywords,
-            require_institution=src.arxiv.require_institution,
-        )
+    collectors = _build_collectors(config, settings)
+    if not collectors:
+        logger.warning("No collectors enabled")
+        return all_items
 
-    def run_blogs() -> list[NewsItem]:
-        return blog_collector.collect(blogs=src.blogs, keywords=keywords)
-
-    def run_github() -> list[NewsItem]:
-        return github_collector.collect(
-            repos=src.github.repos,
-            token=settings.github_token,
-            keywords=keywords,
-        )
-
-    def run_twitter() -> list[NewsItem]:
-        return twitter_collector.collect(
-            kol_list=src.twitter.kol_list,
-            nitter_instance=src.twitter.nitter_instance,
-            keywords=keywords,
-            enabled=src.twitter.enabled,
-        )
-
-    def run_reddit() -> list[NewsItem]:
-        return reddit_collector.collect(
-            subreddits=src.reddit.subreddits,
-            client_id=settings.reddit_client_id,
-            client_secret=settings.reddit_client_secret,
-            time_filter=src.reddit.time_filter,
-            limit=src.reddit.limit,
-            keywords=keywords,
-        )
-
-    def run_hf_papers() -> list[NewsItem]:
-        if not src.hf_papers.enabled:
-            logger.info("HF Papers collector is disabled, skipping")
-            return []
-        return hf_papers_collector.collect(
-            limit=src.hf_papers.limit,
-            keywords=keywords,
-        )
-
-    def run_hackernews() -> list[NewsItem]:
-        if not src.hackernews.enabled:
-            logger.info("Hacker News collector is disabled, skipping")
-            return []
-        return hackernews_collector.collect(
-            story_type=src.hackernews.story_type,
-            limit=src.hackernews.limit,
-            keywords=keywords,
-        )
-
-    tasks = {
-        "arxiv": run_arxiv,
-        "blogs": run_blogs,
-        "github": run_github,
-        "twitter": run_twitter,
-        "reddit": run_reddit,
-        "hf_papers": run_hf_papers,
-        "hackernews": run_hackernews,
-    }
+    logger.info("Running %d collectors in parallel...", len(collectors))
 
     with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = {executor.submit(fn): name for name, fn in tasks.items()}
+        futures = {
+            executor.submit(c.collect, keywords): c.name for c in collectors
+        }
         for future in as_completed(futures):
             name = futures[future]
             try:

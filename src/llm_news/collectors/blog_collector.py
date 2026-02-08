@@ -11,8 +11,8 @@ from time import mktime
 import feedparser
 import httpx
 
-from ..config import BlogSource
 from ..models import NewsItem
+from .base import BaseCollector
 
 logger = logging.getLogger(__name__)
 
@@ -41,78 +41,75 @@ def _matches_keywords(text: str, keywords: list[str]) -> bool:
 
 
 def _fetch_and_parse(url: str, client: httpx.Client) -> feedparser.FeedParserDict:
-    """Fetch RSS content via httpx, then parse with feedparser.
-
-    Some blog servers block feedparser's default user-agent or return
-    malformed XML when accessed directly.  Fetching with httpx first
-    (with a browser-like UA) gives us the raw bytes, which feedparser
-    can often still handle even if the XML is slightly broken.
-    """
+    """Fetch RSS content via httpx, then parse with feedparser."""
     resp = client.get(url)
     resp.raise_for_status()
     return feedparser.parse(resp.content)
 
 
-def collect(
-    blogs: list[BlogSource],
-    keywords: list[str],
-) -> list[NewsItem]:
-    """Collect recent posts from RSS feeds.
+class BlogCollector(BaseCollector):
+    """RSS feed collector for official blogs.
 
-    Args:
-        blogs: List of blog sources with name and RSS URL.
-        keywords: Keywords to filter posts.
-
-    Returns:
-        List of NewsItem from blog feeds.
+    官方博客 RSS 采集器，支持配置多个 RSS 源。
     """
-    items: list[NewsItem] = []
 
-    with httpx.Client(
-        timeout=30,
-        headers=_HTTP_HEADERS,
-        follow_redirects=True,
-    ) as client:
-        for blog in blogs:
-            logger.info("Fetching RSS: %s (%s)", blog.name, blog.url)
-            try:
-                feed = _fetch_and_parse(blog.url, client)
+    name = "blog"
 
-                if feed.bozo and not feed.entries:
-                    logger.warning(
-                        "Failed to parse RSS for %s: %s",
-                        blog.name,
-                        feed.bozo_exception,
-                    )
+    def __init__(self, blogs: list[dict[str, str]] | None = None) -> None:
+        """Args:
+            blogs: List of {"name": ..., "url": ...} dicts.
+        """
+        self.blogs = blogs or []
+
+    def collect(self, keywords: list[str]) -> list[NewsItem]:
+        items: list[NewsItem] = []
+
+        with httpx.Client(
+            timeout=30, headers=_HTTP_HEADERS, follow_redirects=True,
+        ) as client:
+            for blog in self.blogs:
+                blog_name = blog.get("name", "Unknown")
+                blog_url = blog.get("url", "")
+                if not blog_url:
                     continue
 
-                for entry in feed.entries[:20]:  # limit per feed
-                    title = entry.get("title", "").strip()
-                    link = entry.get("link", "")
-                    summary = entry.get("summary", "").strip()
-                    content = (
-                        entry.get("content", [{}])[0].get("value", "")
-                        if entry.get("content")
-                        else ""
-                    )
+                logger.info("Fetching RSS: %s (%s)", blog_name, blog_url)
+                try:
+                    feed = _fetch_and_parse(blog_url, client)
 
-                    # Use summary or content snippet for keyword matching
-                    text_for_match = f"{title} {summary} {content}"
-                    if keywords and not _matches_keywords(text_for_match, keywords):
+                    if feed.bozo and not feed.entries:
+                        logger.warning(
+                            "Failed to parse RSS for %s: %s",
+                            blog_name, feed.bozo_exception,
+                        )
                         continue
 
-                    item = NewsItem(
-                        title=title,
-                        url=link,
-                        source="blog",
-                        source_name=blog.name,
-                        content=summary or content[:500],
-                        published_at=_parse_published(entry),
-                    )
-                    items.append(item)
+                    for entry in feed.entries[:20]:
+                        title = entry.get("title", "").strip()
+                        link = entry.get("link", "")
+                        summary = entry.get("summary", "").strip()
+                        content = (
+                            entry.get("content", [{}])[0].get("value", "")
+                            if entry.get("content")
+                            else ""
+                        )
 
-            except Exception:
-                logger.exception("Failed to fetch RSS for %s", blog.name)
+                        text_for_match = f"{title} {summary} {content}"
+                        if keywords and not _matches_keywords(text_for_match, keywords):
+                            continue
 
-    logger.info("Blogs: collected %d posts", len(items))
-    return items
+                        item = NewsItem(
+                            title=title,
+                            url=link,
+                            source="blog",
+                            source_name=blog_name,
+                            content=summary or content[:500],
+                            published_at=_parse_published(entry),
+                        )
+                        items.append(item)
+
+                except Exception:
+                    logger.exception("Failed to fetch RSS for %s", blog_name)
+
+        logger.info("Blogs: collected %d posts", len(items))
+        return items

@@ -12,6 +12,7 @@ from pydantic_settings import BaseSettings
 # ---------------------------------------------------------------------------
 
 class ArxivConfig(BaseModel):
+    enabled: bool = True
     categories: list[str] = ["cs.CL", "cs.AI", "cs.LG"]
     max_results: int = 50
     require_institution: bool = True  # 仅保留知名大学/公司的论文
@@ -22,25 +23,47 @@ class BlogSource(BaseModel):
     url: str
 
 
+class BlogConfig(BaseModel):
+    enabled: bool = True
+    feeds: list[BlogSource] = []
+
+
 class GithubConfig(BaseModel):
+    enabled: bool = True
     repos: list[str] = []
 
 
-class TwitterConfig(BaseModel):
-    enabled: bool = False
-    kol_list: list[str] = []
-    nitter_instance: str = "https://nitter.privacydev.net"
-
-
-class RedditConfig(BaseModel):
-    subreddits: list[str] = ["MachineLearning", "LocalLLaMA"]
-    time_filter: str = "day"
-    limit: int = 25
+class GithubTrendingConfig(BaseModel):
+    enabled: bool = True
+    period: str = "past_24_hours"
+    language: str = "Python"
 
 
 class HfPapersConfig(BaseModel):
     enabled: bool = True
     limit: int = 30
+
+
+class HfModelsConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 50
+    orgs: list[str] = [
+        "deepseek-ai",
+        "Qwen",
+        "zai-org",
+        "MiniMaxAI",
+        "stepfun-ai",
+        "meta-llama",
+        "mistralai",
+        "google",
+        "microsoft",
+        "openai",
+    ]
+
+
+class PwcConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 50
 
 
 class HackerNewsConfig(BaseModel):
@@ -49,14 +72,23 @@ class HackerNewsConfig(BaseModel):
     limit: int = 60
 
 
+class RedditConfig(BaseModel):
+    enabled: bool = True
+    subreddits: list[str] = ["MachineLearning", "LocalLLaMA"]
+    time_filter: str = "day"
+    limit: int = 25
+
+
 class SourcesConfig(BaseModel):
     arxiv: ArxivConfig = ArxivConfig()
-    blogs: list[BlogSource] = []
+    blog: BlogConfig = BlogConfig()
     github: GithubConfig = GithubConfig()
-    twitter: TwitterConfig = TwitterConfig()
-    reddit: RedditConfig = RedditConfig()
+    github_trending: GithubTrendingConfig = GithubTrendingConfig()
     hf_papers: HfPapersConfig = HfPapersConfig()
+    hf_models: HfModelsConfig = HfModelsConfig()
+    pwc: PwcConfig = PwcConfig()
     hackernews: HackerNewsConfig = HackerNewsConfig()
+    reddit: RedditConfig = RedditConfig()
 
 
 class LlmConfig(BaseModel):
