@@ -44,15 +44,17 @@ def push_bark(
         logger.warning("Bark device key is empty, skipping push")
         return False
 
-    api_url = f"https://api.day.app/{device_key}"
-    payload = {
+    api_url = "https://api.day.app/push"
+    payload: dict[str, str | int] = {
+        "device_key": device_key,
         "title": title,
         "body": body,
         "group": group,
         "icon": icon,
-        "url": url,
         "isArchive": "1",  # 保存到历史记录 / Save to Bark history
     }
+    if url:
+        payload["url"] = url
 
     try:
         resp = httpx.post(api_url, json=payload, timeout=_TIMEOUT)
