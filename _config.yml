@@ -1,0 +1,7 @@
+title: LLM 每日资讯
+description: 每日自动聚合 LLM / AI 领域最新动态
+remote_theme: pages-themes/cayman@v0.2.0
+plugins:
+  - jekyll-remote-theme
+baseurl: /llm-news
+url: https://yingchaox.github.io
