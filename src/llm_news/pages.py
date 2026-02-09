@@ -177,6 +177,26 @@ def build_pages(
     else:
         logger.warning("MP3 not found: %s, audio player will not work", mp3_src)
 
+    # --- Clean up stale HTML files from pre-Jekyll era ---
+    # index.html 优先级高于 index.md，必须清理旧文件
+    stale_html = pages_path / "index.html"
+    if stale_html.exists():
+        stale_html.unlink()
+        logger.info("Removed stale index.html (conflicts with Jekyll index.md)")
+
+    for sub in pages_path.iterdir():
+        if sub.is_dir() and len(sub.name) == 10:
+            stale_day_html = sub / "index.html"
+            if stale_day_html.exists():
+                stale_day_html.unlink()
+                logger.info("Removed stale %s/index.html", sub.name)
+
+    # Remove .nojekyll if present (Jekyll must be enabled)
+    nojekyll = pages_path / ".nojekyll"
+    if nojekyll.exists():
+        nojekyll.unlink()
+        logger.info("Removed .nojekyll file to enable Jekyll processing")
+
     # --- Rebuild index page ---
     dates = sorted(
         [d.name for d in pages_path.iterdir() if d.is_dir() and len(d.name) == 10],

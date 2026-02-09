@@ -75,5 +75,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./pages
           keep_files: true
+          enable_jekyll: true
 
       # history.json is auto-saved by actions/cache post step
