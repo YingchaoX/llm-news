@@ -11,5 +11,6 @@ layout: default
 
 | 日期 | 链接 |
 |------|------|
+| 2026-02-10 | [查看日报](https://yingchaox.github.io/llm-news/2026-02-10/) |
 | 2026-02-09 | [查看日报](https://yingchaox.github.io/llm-news/2026-02-09/) |
 | 2026-02-08 | [查看日报](https://yingchaox.github.io/llm-news/2026-02-08/) |
