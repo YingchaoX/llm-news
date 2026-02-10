@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .collectors import REGISTRY, BaseCollector
 from .config import AppConfig, Settings, load_config
-from .dedup import deduplicate, load_history, save_history
+from .dedup import deduplicate, extract_canonical_key, load_history, save_history
 from .models import NewsItem
 from .output import save_report
 from .pages import build_pages
@@ -249,10 +249,18 @@ def run(config_path: str = "config.yaml") -> None:
         except Exception:
             logger.exception("Bark push failed")
 
-    # 8. Update history
+    # 8. Update history (URLs + canonical keys for cross-source dedup)
+    # 更新历史记录（URL + 规范 key，支持跨源去重）
     logger.info("--- Phase 7: Updating History ---")
     new_urls = {item.url for item in items}
-    save_history(history | new_urls)
+    new_canon_keys = {
+        key for item in items
+        if (key := extract_canonical_key(item)) is not None
+    }
+    save_history({
+        "urls": history.get("urls", set()) | new_urls,
+        "canonical_keys": history.get("canonical_keys", set()) | new_canon_keys,
+    })
 
     # Done
     logger.info("=" * 60)
